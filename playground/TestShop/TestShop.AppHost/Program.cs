@@ -25,20 +25,21 @@ var basketService = builder.AddProject("basketservice", @"..\BasketService\Baske
                            .WithReference(basketCache)
                            .WithReference(messaging);
 
-builder.AddProject<Projects.MyFrontend>("frontend")
-       .WithExternalHttpEndpoints()
-       .WithReference(basketService)
-       .WithReference(catalogService);
-
 builder.AddProject<Projects.OrderProcessor>("orderprocessor", launchProfileName: "OrderProcessor")
        .WithReference(messaging);
 
-builder.AddProject<Projects.ApiGateway>("apigateway")
-       .WithReference(basketService)
-       .WithReference(catalogService);
-
 builder.AddProject<Projects.CatalogDb>("catalogdbapp")
        .WithReference(catalogDb);
+
+var apiGateway = builder.AddYarp("apigateway", "yarp.json", 5000)
+                        .WithReference(basketService)
+                        .WithReference(catalogService);
+
+builder.AddProject<Projects.MyFrontend>("frontend")
+       .WithExternalHttpEndpoints()
+       .WithReference(apiGateway)
+       .WithReference(basketService)
+       .WithReference(catalogService);
 
 // This project is only added in playground projects to support development/debugging
 // of the dashboard. It is not required in end developer code. Comment out this code
