@@ -1,0 +1,68 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Information"
+    }
+  },
+  "Kestrel": {
+    "Endpoints": {
+      "Http": {
+        "Url": "http://0.0.0.0:5000"
+      },
+      //"Https": {
+      //  "Url": "https://0.0.0.0:5001",
+      //  "Certificate": {
+      //    "Path": "/etc/ssl/cert.pfx",
+      //    "Password":  "development"
+      //  }
+      //}
+    }
+  },
+  "AllowedHosts": "*",
+  "ReverseProxy": {
+    "Routes": {
+      "catalog": {
+        "ClusterId": "catalog",
+        "Match": {
+          "Path": "/catalog/{**catch-all}"
+        },
+        "Transforms": [
+          { "PathRemovePrefix": "/catalog" }
+        ]
+      },
+      "basket": {
+        "ClusterId": "basket",
+        "Match": {
+          "Path": "/basket/{**catch-all}"
+        },
+        "Transforms": [
+          { "PathRemovePrefix": "/basket" }
+        ]
+      }
+    },
+    "Clusters": {
+      "catalog": {
+        "Destinations": {
+          "catalog": {
+            "Address": "https://catalogservice",
+            "Health": "https://catalogservice/readiness"
+          }
+        },
+        "HttpClient": {
+          "DangerousAcceptAnyServerCertificate": "false"
+        }
+      },
+      "basket": {
+        "Destinations": {
+          "basket": {
+            "Address": "https://host.docker.internal:15887"
+          }
+        },
+        "HttpClient": {
+          "DangerousAcceptAnyServerCertificate": "false"
+        }
+      }
+    }
+  }
+}

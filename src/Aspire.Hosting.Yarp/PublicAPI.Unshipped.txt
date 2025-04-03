@@ -1,0 +1,6 @@
+#nullable enable
+Aspire.Hosting.Yarp.YarpResource
+Aspire.Hosting.Yarp.YarpResource.YarpResource(string! name) -> void
+Aspire.Hosting.YarpServiceExtensions
+static Aspire.Hosting.YarpServiceExtensions.AddYarp(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string! configFilePath, int? port = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.Yarp.YarpResource!>!
+static Aspire.Hosting.YarpServiceExtensions.UseDevelopmentCertificate(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.Yarp.YarpResource!>! resource) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.Yarp.YarpResource!>!

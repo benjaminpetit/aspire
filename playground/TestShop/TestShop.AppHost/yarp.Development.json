@@ -1,0 +1,7 @@
+{
+  "ReverseProxy": {
+    "HttpClient": {
+      "DangerousAcceptAnyServerCertificate": false
+    }
+  }
+}
