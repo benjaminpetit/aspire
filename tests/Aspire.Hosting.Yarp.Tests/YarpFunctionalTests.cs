@@ -80,6 +80,13 @@ public class YarpFunctionalTests(ITestOutputHelper testOutputHelper)
             //        }
             //    ]
             //);
+
+
+            backend.WithYarp(yarp =>
+            {
+                yarp.AddRoute(routeMatch: new RouteMatch { Path = "/aspnetapp/{**catch-all}" });
+            });
+
             yarp.WithReference(
                 proxiedResource: backend.GetEndpoint("http"),
                 routeMatch: new RouteMatch { Path = "/aspnetapp/{**catch-all}" },
