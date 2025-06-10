@@ -3,6 +3,7 @@
 
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Yarp;
+using Yarp.ReverseProxy.Configuration;
 
 namespace Aspire.Hosting;
 
@@ -83,5 +84,121 @@ public static class YarpServiceExtensions
     {
         configurationBuilder(builder.Resource.ConfigurationBuilder);
         return builder;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="builder"></param>
+    /// <param name="proxiedResource"></param>
+    /// <param name="routeMatch"></param>
+    /// <param name="order"></param>
+    /// <param name="authorizationPolicy"></param>
+    /// <param name="rateLimiterPolicy"></param>
+    /// <param name="outputCachePolicy"></param>
+    /// <param name="timeoutPolicy"></param>
+    /// <param name="timeout"></param>
+    /// <param name="corsPolicy"></param>
+    /// <param name="maxRequestBodySize"></param>
+    /// <param name="metadata"></param>
+    /// <param name="transforms"></param>
+    /// <returns></returns>
+    public static IResourceBuilder<YarpResource> WithReference(
+        this IResourceBuilder<YarpResource> builder,
+        EndpointReference proxiedResource,
+        RouteMatch routeMatch,
+        int? order = null,
+        string? authorizationPolicy = null,
+        string? rateLimiterPolicy = null,
+        string? outputCachePolicy = null,
+        string? timeoutPolicy = null,
+        TimeSpan? timeout = null,
+        string? corsPolicy = null,
+        long? maxRequestBodySize = null,
+        IReadOnlyDictionary<string, string>? metadata = null,
+        IReadOnlyList<IReadOnlyDictionary<string, string>>? transforms = null)
+    {
+        var id = Guid.NewGuid().ToString("N");
+        var clusterId = $"cluster_{proxiedResource.Resource.Name}_{id}";
+        var routeConfig = new RouteConfig
+        {
+            RouteId = $"route_{proxiedResource.Resource.Name}_{id}",
+            ClusterId = clusterId,
+            Match = routeMatch,
+            Order = order,
+            AuthorizationPolicy = authorizationPolicy,
+            RateLimiterPolicy = rateLimiterPolicy,
+            OutputCachePolicy = outputCachePolicy,
+            TimeoutPolicy = timeoutPolicy,
+            Timeout = timeout,
+            CorsPolicy = corsPolicy,
+            MaxRequestBodySize = maxRequestBodySize,
+            Metadata = metadata,
+            Transforms = transforms,
+        };
+        var clusterConfig = new ClusterConfig
+        {
+            ClusterId = clusterId,
+            Destinations = new Dictionary<string, DestinationConfig>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "destination0", new DestinationConfig { Address = $"{proxiedResource.Scheme}://{proxiedResource.Resource.Name}"} }
+            },
+        };
+        builder.Configure(configuration =>
+        {
+            configuration
+                .AddRoute(routeConfig)
+                .AddCluster(clusterConfig);
+        });
+        return builder.WithReference(proxiedResource);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="builder"></param>
+    /// <param name="proxiedResource"></param>
+    /// <param name="routeMatch"></param>
+    /// <param name="transforms"></param>
+    /// <param name="order"></param>
+    /// <param name="authorizationPolicy"></param>
+    /// <param name="rateLimiterPolicy"></param>
+    /// <param name="outputCachePolicy"></param>
+    /// <param name="timeoutPolicy"></param>
+    /// <param name="timeout"></param>
+    /// <param name="corsPolicy"></param>
+    /// <param name="maxRequestBodySize"></param>
+    /// <param name="metadata"></param>
+    /// <returns></returns>
+    public static IResourceBuilder<YarpResource> WithReference(
+        this IResourceBuilder<YarpResource> builder,
+        EndpointReference proxiedResource,
+        RouteMatch routeMatch,
+        Action<RouteTransformsBuilder> transforms,
+        int? order = null,
+        string? authorizationPolicy = null,
+        string? rateLimiterPolicy = null,
+        string? outputCachePolicy = null,
+        string? timeoutPolicy = null,
+        TimeSpan? timeout = null,
+        string? corsPolicy = null,
+        long? maxRequestBodySize = null,
+        IReadOnlyDictionary<string, string>? metadata = null)
+    {
+        var routeTransforms = new RouteTransformsBuilder();
+        transforms(routeTransforms);
+        return builder.WithReference(
+            proxiedResource,
+            routeMatch,
+            order,
+            authorizationPolicy,
+            rateLimiterPolicy,
+            outputCachePolicy,
+            timeoutPolicy,
+            timeout,
+            corsPolicy,
+            maxRequestBodySize,
+            metadata,
+            routeTransforms.Build());
     }
 }
