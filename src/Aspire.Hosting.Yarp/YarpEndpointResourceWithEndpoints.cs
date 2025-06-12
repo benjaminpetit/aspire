@@ -27,6 +27,36 @@ public static class YarpEndpointResourceWithEndpoints
         endpointConfigurator.AddCluster();
         return builder;
     }
+
+    public static IYarpEndpointConfigurator AddRoute(
+        this IYarpEndpointConfigurator endpointConfigurator,
+        RouteMatch routeMatch,
+        Action<RouteTransformsBuilder> transforms,
+        int? order = null,
+        string? authorizationPolicy = null,
+        string? rateLimiterPolicy = null,
+        string? outputCachePolicy = null,
+        string? timeoutPolicy = null,
+        TimeSpan? timeout = null,
+        string? corsPolicy = null,
+        long? maxRequestBodySize = null,
+        IReadOnlyDictionary<string, string>? metadata = null)
+    {
+        var routeTransforms = new RouteTransformsBuilder();
+        transforms(routeTransforms);
+        return endpointConfigurator.AddRoute(
+            routeMatch,
+            order,
+            authorizationPolicy,
+            rateLimiterPolicy,
+            outputCachePolicy,
+            timeoutPolicy,
+            timeout,
+            corsPolicy,
+            maxRequestBodySize,
+            metadata,
+            routeTransforms.Build());
+    }
 }
 
 /// <summary>

@@ -40,58 +40,60 @@ public class YarpFunctionalTests(ITestOutputHelper testOutputHelper)
         var yarp = builder.AddYarp("yarp");
         if (useProgrammaticConfig)
         {
-            //yarp.Configure(configuration =>
-            //{
-            //    configuration
-            //        .AddRoute(new RouteConfig()
-            //        {
-            //            RouteId = "route1",
-            //            ClusterId = "cluster1",
-            //            Match = new RouteMatch()
-            //            {
-            //                Path = "/aspnetapp/{**catch-all}"
-            //            },
-            //            Transforms = new[]
-            //            {
-            //                new Dictionary<string, string>
-            //                {
-            //                    { "PathRemovePrefix", "/aspnetapp" },
-            //                }
-            //            }
-            //        })
-            //        .AddCluster(new ClusterConfig()
-            //        {
-            //            ClusterId = "cluster1",
-            //            Destinations = new Dictionary<string, DestinationConfig>(StringComparer.OrdinalIgnoreCase)
-            //            {
-            //                { "destination1", new DestinationConfig { Address = "http://backend" } },
-            //            }
-            //        });
-            //});
-
-            //yarp.WithReference(
-            //    proxiedResource: backend.GetEndpoint("http"),
-            //    routeMatch: new RouteMatch { Path = "/aspnetapp/{**catch-all}" },
-            //    transforms:
-            //    [
-            //        new Dictionary<string, string>
-            //        {
-            //            { "PathRemovePrefix", "/aspnetapp" },
-            //        }
-            //    ]
-            //);
-
-
-            backend.WithYarp(yarp =>
+            yarp.Configure(configuration =>
             {
-                yarp.AddRoute(routeMatch: new RouteMatch { Path = "/aspnetapp/{**catch-all}" });
+                configuration
+                    .AddRoute(new RouteConfig()
+                    {
+                        RouteId = "route1",
+                        ClusterId = "cluster1",
+                        Match = new RouteMatch()
+                        {
+                            Path = "/aspnetapp/{**catch-all}"
+                        },
+                        Transforms = new[]
+                        {
+                            new Dictionary<string, string>
+                            {
+                                { "PathRemovePrefix", "/aspnetapp" },
+                            }
+                        }
+                    })
+                    .AddCluster(new ClusterConfig()
+                    {
+                        ClusterId = "cluster1",
+                        Destinations = new Dictionary<string, DestinationConfig>(StringComparer.OrdinalIgnoreCase)
+                        {
+                            { "destination1", new DestinationConfig { Address = "http://backend" } },
+                        }
+                    });
             });
 
             yarp.WithReference(
                 proxiedResource: backend.GetEndpoint("http"),
                 routeMatch: new RouteMatch { Path = "/aspnetapp/{**catch-all}" },
-                transforms: transforms => transforms.WithTransformPathRemovePrefix("/aspnetapp")
+                transforms:
+                [
+                    new Dictionary<string, string>
+                    {
+                        { "PathRemovePrefix", "/aspnetapp" },
+                    }
+                ]
             );
+
+            yarp.WithReference(
+                proxiedResource: backend.GetEndpoint("http"),
+                routeMatch: new RouteMatch { Path = "/aspnetapp/{**catch-all}" },
+                transforms: transforms => transforms.WithTransformPathRemovePrefix("/aspnetapp"));
+
+            backend.WithYarp(yarp =>
+            {
+                yarp.AddRoute(
+                    routeMatch: new RouteMatch { Path = "/aspnetapp/{**catch-all}" },
+                    transforms: transforms => transforms.WithTransformPathRemovePrefix("/aspnetapp"));
+                // TODO config backend
+                yarp.ConfigureCluster([...]);
+            });
         }
         else
         {
