@@ -1,3 +1,5 @@
+using Aspire.Hosting.Yarp;
+using Aspire.Hosting.Yarp.Transforms;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -77,10 +79,22 @@ var frontend = builder.AddProject<Projects.MyFrontend>("frontend")
 builder.AddProject<Projects.OrderProcessor>("orderprocessor", launchProfileName: "OrderProcessor")
         .WithReference(messaging).WaitFor(messaging);
 
+#if YARP_USE_CONFIG_FILE
 builder.AddYarp("apigateway")
        .WithConfigFile("yarp.json")
        .WithReference(basketService)
        .WithReference(catalogService);
+#else
+var yarp = builder.AddYarp("apigateway");
+// catalog 
+yarp.AddRoute("/catalog/{**catch-all}")
+    .WithTransformPathRemovePrefix("/catalog")
+    .WithReference(catalogService.GetEndpoint("http"));
+// basket
+yarp.AddRoute("/catalog/{**catch-all}")
+    .WithTransformPathRemovePrefix("/catalog")
+    .WithReference(basketService.GetEndpoint("http"));
+#endif
 
 #if !SKIP_DASHBOARD_REFERENCE
 // This project is only added in playground projects to support development/debugging
