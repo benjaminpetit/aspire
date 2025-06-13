@@ -47,6 +47,14 @@ public static class YarpServiceExtensions
         // Map the configuration file
         yarpBuilder.WithContainerFiles(ConfigDirectory, async (context, ct) =>
         {
+            foreach (var route in yarpBuilder.Resource.Routes)
+            {
+                yarpBuilder.Resource.ConfigurationBuilder.AddRoute(route.RouteConfig);
+            }
+            foreach (var destination in yarpBuilder.Resource.Destinations)
+            {
+                yarpBuilder.Resource.ConfigurationBuilder.AddCluster(destination.ClusterConfig);
+            }
             var contents = await yarpBuilder.Resource.ConfigurationBuilder.Build(ct).ConfigureAwait(false);
 
             var configFile = new ContainerFile
@@ -84,4 +92,35 @@ public static class YarpServiceExtensions
         configurationBuilder(builder.Resource.ConfigurationBuilder);
         return builder;
     }
+
+    /// <summary>
+    /// Add a route to the YARP resource
+    /// </summary>
+    /// <param name="builder">The YARP resource to configure.</param>
+    /// <param name="path">Only match requests with the given Path pattern. Optional.</param>
+    /// <returns></returns>
+    public static YarpRoute AddRoute(this IResourceBuilder<YarpResource> builder, string? path = null)
+    {
+        var route = new YarpRoute(builder);
+        if (path != null)
+        {
+            route.WithMatchPath(path);
+        }
+        builder.Resource.Routes.Add(route);
+        return route;
+    }
+    /// <summary>
+    /// Add a route to the YARP resource
+    /// </summary>
+    /// <param name="builder">The YARP resource to configure.</param>
+    /// <param name="endpointReference">The endpoint to reference.</param>
+    /// <returns></returns>
+    public static YarpDestination AddDestination(this IResourceBuilder<YarpResource> builder, EndpointReference endpointReference)
+    {
+        var destination = new YarpDestination(builder, endpointReference);
+        builder.Resource.Destinations.Add(destination);
+        builder.WithReference(endpointReference);
+        return destination;
+    }
+
 }

@@ -15,4 +15,8 @@ public class YarpResource(string name) : ContainerResource(name)
     /// Configuration builder used to build the config file for the YARP resource
     /// </summary>
     internal YarpConfigurationBuilder ConfigurationBuilder { get; } = new YarpConfigurationBuilder();
+
+    internal List<YarpRoute> Routes { get; } = new();
+
+    internal List<YarpDestination> Destinations { get; } = new();
 }
